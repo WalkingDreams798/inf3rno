@@ -10,8 +10,10 @@ import os
 
 from core.utils import print_banner, check_port, detect_service, scan_common_ports
 from core.generator import PasswordGenerator
+from core.smart_wordlist import SmartWordlist
 from core.state import StateManager
 from core.reporter import ReportExporter
+from core.validator import CredentialValidator
 from modules.ssh import SSHBrute
 from modules.ftp import FTPBrute
 from modules.http import HTTPBrute
@@ -68,7 +70,15 @@ Examples:
     generator.add_argument("--gen-charset", default="all", choices=["all", "alpha", "digits", "alphanum"],
                            help="Charset for length-based generation")
     generator.add_argument("--gen-random", type=int, help="Generate N random passwords")
+    generator.add_argument("--gen-rule", action="store_true", help="Generate with rules (leet, capitalize, etc)")
+    generator.add_argument("--gen-rule-input", help="Input file for rule-based generation")
     generator.add_argument("--save-gen", help="Save generated passwords to file")
+
+    smart = parser.add_argument_group("Smart Wordlist")
+    smart.add_argument("--smart", action="store_true", help="Generate smart wordlist from target")
+    smart.add_argument("--smart-rules", default="leet,capitalize,append_number",
+                       help="Rules for smart generation (comma-separated)")
+    smart.add_argument("--smart-max-length", type=int, default=12, help="Max password length for smart gen")
 
     output = parser.add_argument_group("Output")
     output.add_argument("-o", "--output", help="Output file for found credentials")
@@ -106,6 +116,55 @@ def handle_generator(args):
     elif args.gen_random:
         print(f"[*] Generating {args.gen_random} random passwords")
         passwords = gen.generate_random(args.gen_random)
+
+    elif args.gen_rule:
+        # Rule-based generation from input file
+        if not args.gen_rule_input:
+            print("[!] Input file required for rule-based generation. Use --gen-rule-input")
+            return False
+
+        if not os.path.exists(args.gen_rule_input):
+            print(f"[!] Input file not found: {args.gen_rule_input}")
+            return False
+
+        with open(args.gen_rule_input, "r") as f:
+            words = [line.strip() for line in f if line.strip()]
+
+        rules = ["leet", "capitalize", "append_number", "prepend_number", "duplicate", "reverse"]
+        print(f"[*] Generating {len(words)} words with {len(rules)} rules...")
+        passwords = gen.generate_from_words(words, rules)
+
+    elif args.smart:
+        # Smart wordlist generation
+        target = args.target or "localhost"
+        username = args.user or "admin"
+        rules = args.smart_rules.split(",")
+
+        print(f"[*] Generating smart wordlist for: {target}")
+        print(f"[*] Username: {username}")
+        print(f"[*] Rules: {rules}")
+
+        smart = SmartWordlist()
+        base_words = smart.generate_from_target(
+            target, username,
+            include_numbers=True,
+            include_symbols=True,
+            max_length=args.smart_max_length
+        )
+
+        # Apply rules to base words
+        all_passwords = []
+        for word in base_words:
+            variations = gen.apply_rules(word, rules)
+            all_passwords.extend(variations)
+
+        # Deduplicate
+        seen = set()
+        passwords = []
+        for p in all_passwords:
+            if p not in seen:
+                seen.add(p)
+                passwords.append(p)
 
     else:
         return False
@@ -314,7 +373,7 @@ def main():
         return
 
     # Handle password generation
-    if args.gen_mask or args.gen_length or args.gen_random:
+    if args.gen_mask or args.gen_length or args.gen_random or args.gen_rule or args.smart:
         if not handle_generator(args):
             print("[!] Password generation failed.")
         return
