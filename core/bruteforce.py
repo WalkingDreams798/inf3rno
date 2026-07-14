@@ -3,8 +3,10 @@
 import threading
 import queue
 import time
-from typing import Optional, Callable
+from typing import Optional
 from abc import ABC, abstractmethod
+
+from core.reporter import Reporter
 
 
 class BaseBrute(ABC):
@@ -31,9 +33,9 @@ class BaseBrute(ABC):
         self.password_queue = queue.Queue()
         self.found = []
         self.attempts = 0
-        self.start_time = None
         self.lock = threading.Lock()
         self.stop_event = threading.Event()
+        self.reporter = Reporter(verbose=verbose, output_file=output_file)
 
     @abstractmethod
     def try_login(self, username: str, password: str) -> bool:
@@ -50,7 +52,7 @@ class BaseBrute(ABC):
                         self.password_queue.put(password)
             return True
         except FileNotFoundError:
-            print(f"[!] Wordlist not found: {self.wordlist}")
+            self.reporter.error(f"Wordlist not found: {self.wordlist}")
             return False
 
     def worker(self):
@@ -69,41 +71,31 @@ class BaseBrute(ABC):
                 if success:
                     with self.lock:
                         self.found.append((self.username, password))
-                    print(f"\n[+] FOUND: {self.username}:{password}")
-                    self._save_result(self.username, password)
+                    self.reporter.attempt(self.username, password, True)
                 elif self.verbose:
-                    print(f"[-] Failed: {self.username}:{password}")
+                    self.reporter.attempt(self.username, password, False)
 
             except Exception as e:
                 if self.verbose:
-                    print(f"[!] Error: {e}")
+                    self.reporter.error(f"Error: {e}")
 
             finally:
                 self.password_queue.task_done()
 
-    def _save_result(self, username: str, password: str):
-        """Save found credentials to file."""
-        if self.output_file:
-            with open(self.output_file, "a") as f:
-                f.write(f"{username}:{password}\n")
-        else:
-            with open("output/Found.txt", "a") as f:
-                f.write(f"{username}:{password}\n")
-
     def run(self):
         """Run the brute-force attack."""
-        print(f"[*] Target: {self.target}:{self.port}")
-        print(f"[*] Username: {self.username}")
-        print(f"[*] Threads: {self.threads}")
+        self.reporter.info(f"Target: {self.target}:{self.port}")
+        self.reporter.info(f"Username: {self.username}")
+        self.reporter.info(f"Threads: {self.threads}")
 
         if not self.load_wordlist():
             return
 
         total = self.password_queue.qsize()
-        print(f"[*] Passwords loaded: {total}")
-        print("[*] Starting brute-force...\n")
+        self.reporter.info(f"Passwords loaded: {total}")
+        self.reporter.info("Starting brute-force...\n")
 
-        self.start_time = time.time()
+        self.reporter.start()
 
         threads = []
         for _ in range(self.threads):
@@ -117,13 +109,5 @@ class BaseBrute(ABC):
         for t in threads:
             t.join()
 
-        elapsed = time.time() - self.start_time
-        print(f"\n[*] Completed in {elapsed:.2f}s")
-        print(f"[*] Attempts: {self.attempts}")
-
-        if self.found:
-            print(f"\n[+] Found {len(self.found)} valid credential(s):")
-            for user, pwd in self.found:
-                print(f"    {user}:{pwd}")
-        else:
-            print("[-] No valid credentials found.")
+        self.reporter.summary()
+        self.reporter.close()
