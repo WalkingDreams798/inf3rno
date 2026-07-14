@@ -16,6 +16,10 @@ from modules.ssh import SSHBrute
 from modules.ftp import FTPBrute
 from modules.http import HTTPBrute
 from modules.mysql import MySQLBrute
+from modules.smtp import SMTPBrute
+from modules.redis import RedisBrute
+from modules.postgresql import PostgreSQLBrute
+from modules.telnet import TelnetBrute
 
 
 def parse_args():
@@ -50,6 +54,10 @@ Examples:
     service.add_argument("--ftp", action="store_true", help="FTP mode (port 21)")
     service.add_argument("--http", action="store_true", help="HTTP mode (port 80)")
     service.add_argument("--mysql", action="store_true", help="MySQL mode (port 3306)")
+    service.add_argument("--smtp", action="store_true", help="SMTP mode (port 587)")
+    service.add_argument("--redis", action="store_true", help="Redis mode (port 6379)")
+    service.add_argument("--postgresql", action="store_true", help="PostgreSQL mode (port 5432)")
+    service.add_argument("--telnet", action="store_true", help="Telnet mode (port 23)")
     service.add_argument("--http-port", type=int, default=80, help="HTTP port (default: 80)")
     service.add_argument("--login-url", help="HTTP login URL for form-based auth")
     service.add_argument("--fail-string", default="Invalid", help="HTTP fail string")
@@ -145,9 +153,21 @@ def get_brute_module(args):
     elif args.mysql:
         service = "MySQL"
         port = port or 3306
+    elif args.smtp:
+        service = "SMTP"
+        port = port or 587
+    elif args.redis:
+        service = "Redis"
+        port = port or 6379
+    elif args.postgresql:
+        service = "PostgreSQL"
+        port = port or 5432
+    elif args.telnet:
+        service = "Telnet"
+        port = port or 23
 
     if not service:
-        print("[!] No service specified. Use --ssh, --ftp, --http, --mysql, or --auto")
+        print("[!] No service specified. Use --ssh, --ftp, --http, --mysql, --smtp, --redis, --postgresql, --telnet, or --auto")
         return None, None
 
     if not check_port(args.target, port):
@@ -188,6 +208,18 @@ def get_brute_module(args):
     elif service == "MySQL":
         module_class = MySQLBrute
         default_user = "root"
+    elif service == "SMTP":
+        module_class = SMTPBrute
+        default_user = ""
+    elif service == "Redis":
+        module_class = RedisBrute
+        default_user = "default"
+    elif service == "PostgreSQL":
+        module_class = PostgreSQLBrute
+        default_user = "postgres"
+    elif service == "Telnet":
+        module_class = TelnetBrute
+        default_user = "admin"
     else:
         print(f"[!] Unsupported service: {service}")
         return None, None
