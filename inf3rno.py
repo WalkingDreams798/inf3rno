@@ -80,6 +80,10 @@ Examples:
     advanced.add_argument("-T", "--threads", type=int, default=5, help="Number of threads (default: 5)")
     advanced.add_argument("--delay", type=float, default=0.0, help="Delay between attempts in seconds (default: 0)")
     advanced.add_argument("--proxy", help="Proxy URL (socks5://host:port, http://host:port)")
+    advanced.add_argument("--rate-limit", action="store_true", help="Enable rate limit detection")
+    advanced.add_argument("--rate-max-failures", type=int, default=10, help="Max failures before pause (default: 10)")
+    advanced.add_argument("--rate-window", type=int, default=60, help="Failure window in seconds (default: 60)")
+    advanced.add_argument("--rate-pause-time", type=int, default=60, help="Pause duration when rate limited (default: 60)")
     advanced.add_argument("--list", action="store_true", help="Scan and list common open ports")
     advanced.add_argument("--resume", action="store_true", help="Resume previous attack")
     advanced.add_argument("--list-states", action="store_true", help="List saved attack states")
@@ -237,6 +241,10 @@ def get_brute_module(args):
             verbose=args.verbose,
             delay=args.delay,
             proxy=args.proxy,
+            rate_limit=args.rate_limit,
+            rate_max_failures=args.rate_max_failures,
+            rate_window=args.rate_window,
+            rate_pause_time=args.rate_pause_time,
             **extra_kwargs,
         )
     else:
@@ -253,6 +261,10 @@ def get_brute_module(args):
             verbose=args.verbose,
             delay=args.delay,
             proxy=args.proxy,
+            rate_limit=args.rate_limit,
+            rate_max_failures=args.rate_max_failures,
+            rate_window=args.rate_window,
+            rate_pause_time=args.rate_pause_time,
             **extra_kwargs,
         )
 
