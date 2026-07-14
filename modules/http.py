@@ -10,14 +10,22 @@ class HTTPBrute(BaseBrute):
     def __init__(self, target: str, port: int = 80, username: str = "admin",
                  wordlist: str = "wordlists/passwords.txt", threads: int = 5,
                  output_file: str = None, verbose: bool = False,
+                 delay: float = 0.0, proxy: str = None,
                  login_url: str = None, fail_string: str = None,
                  method: str = "basic"):
-        super().__init__(target, port, username, wordlist, threads, output_file, verbose)
+        super().__init__(target, port, username, wordlist, threads, output_file, verbose, delay, proxy)
         self.service = "HTTP"
         self.login_url = login_url
         self.fail_string = fail_string or "Invalid"
         self.method = method
         self.session = requests.Session()
+
+        # Configure proxy
+        if self.proxy:
+            self.session.proxies = {
+                "http": self.proxy,
+                "https": self.proxy,
+            }
 
     def try_login(self, username: str, password: str) -> bool:
         """Attempt HTTP login."""

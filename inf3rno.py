@@ -11,6 +11,7 @@ import os
 from core.utils import print_banner, check_port, detect_service, scan_common_ports
 from core.generator import PasswordGenerator
 from core.state import StateManager
+from core.reporter import ReportExporter
 from modules.ssh import SSHBrute
 from modules.ftp import FTPBrute
 from modules.http import HTTPBrute
@@ -29,6 +30,8 @@ Examples:
   %(prog)s -t target.com --http -U users.txt -w passwords.txt
   %(prog)s -t 192.168.1.1 -u admin --gen-mask "?l?l?l?d?d"
   %(prog)s -t scanme.org --auto
+  %(prog)s -t 192.168.1.1 --ssh -U users.txt -w passwords.txt --delay 0.5
+  %(prog)s -t 192.168.1.1 --ssh -u admin -w passwords.txt --proxy socks5://127.0.0.1:9050
         """
     )
 
@@ -62,9 +65,13 @@ Examples:
     output = parser.add_argument_group("Output")
     output.add_argument("-o", "--output", help="Output file for found credentials")
     output.add_argument("-v", "--verbose", action="store_true", help="Verbose output")
+    output.add_argument("--export", choices=["json", "csv", "html", "all"], help="Export report format")
+    output.add_argument("--export-file", help="Export filename (without extension)")
 
     advanced = parser.add_argument_group("Advanced")
     advanced.add_argument("-T", "--threads", type=int, default=5, help="Number of threads (default: 5)")
+    advanced.add_argument("--delay", type=float, default=0.0, help="Delay between attempts in seconds (default: 0)")
+    advanced.add_argument("--proxy", help="Proxy URL (socks5://host:port, http://host:port)")
     advanced.add_argument("--list", action="store_true", help="Scan and list common open ports")
     advanced.add_argument("--resume", action="store_true", help="Resume previous attack")
     advanced.add_argument("--list-states", action="store_true", help="List saved attack states")
@@ -147,52 +154,75 @@ def get_brute_module(args):
         print(f"[!] Port {port} is closed or unreachable.")
         return None, None
 
-    # Select module
+    # Load usernames
+    usernames = []
+    if args.userlist:
+        try:
+            with open(args.userlist, "r", encoding="utf-8", errors="ignore") as f:
+                usernames = [line.strip() for line in f if line.strip()]
+            print(f"[*] Loaded {len(usernames)} usernames from {args.userlist}")
+        except FileNotFoundError:
+            print(f"[!] Userlist not found: {args.userlist}")
+            return None, None
+    else:
+        usernames = [args.user or "admin"]
+
+    # Select module class
+    module_class = None
+    default_user = "root"
+    extra_kwargs = {}
+
     if service == "SSH":
-        module = SSHBrute(
-            target=args.target,
-            port=port,
-            username=args.user or "root",
-            wordlist=args.wordlist,
-            threads=args.threads,
-            output_file=args.output,
-            verbose=args.verbose,
-        )
+        module_class = SSHBrute
+        default_user = "root"
     elif service == "FTP":
-        module = FTPBrute(
-            target=args.target,
-            port=port,
-            username=args.user or "anonymous",
-            wordlist=args.wordlist,
-            threads=args.threads,
-            output_file=args.output,
-            verbose=args.verbose,
-        )
+        module_class = FTPBrute
+        default_user = "anonymous"
     elif service == "HTTP":
-        module = HTTPBrute(
-            target=args.target,
-            port=port,
-            username=args.user or "admin",
-            wordlist=args.wordlist,
-            threads=args.threads,
-            output_file=args.output,
-            verbose=args.verbose,
-            login_url=args.login_url,
-            fail_string=args.fail_string,
-        )
+        module_class = HTTPBrute
+        default_user = "admin"
+        extra_kwargs = {
+            "login_url": args.login_url,
+            "fail_string": args.fail_string,
+        }
     elif service == "MySQL":
-        module = MySQLBrute(
-            target=args.target,
-            port=port,
-            username=args.user or "root",
-            wordlist=args.wordlist,
-            threads=args.threads,
-            output_file=args.output,
-            verbose=args.verbose,
-        )
+        module_class = MySQLBrute
+        default_user = "root"
     else:
         print(f"[!] Unsupported service: {service}")
         return None, None
+
+    # Create module(s)
+    if len(usernames) == 1:
+        # Single username
+        module = module_class(
+            target=args.target,
+            port=port,
+            username=usernames[0] or default_user,
+            wordlist=args.wordlist,
+            threads=args.threads,
+            output_file=args.output,
+            verbose=args.verbose,
+            delay=args.delay,
+            proxy=args.proxy,
+            **extra_kwargs,
+        )
+    else:
+        # Multiple usernames
+        from core.bruteforce import MultiUserBrute
+        module = MultiUserBrute(
+            brute_class=module_class,
+            target=args.target,
+            port=port,
+            usernames=usernames,
+            wordlist=args.wordlist,
+            threads=args.threads,
+            output_file=args.output,
+            verbose=args.verbose,
+            delay=args.delay,
+            proxy=args.proxy,
+            **extra_kwargs,
+        )
 
     return module, service
 
@@ -269,6 +299,73 @@ def main():
 
     # Run attack
     module.run(resume=args.resume)
+
+    # Export report if requested
+    if args.export and hasattr(module, "found") and module.found:
+        exporter = ReportExporter()
+        export_file = args.export_file or "report"
+
+        if args.export == "all":
+            exporter.export_all(
+                module.found,
+                target=args.target,
+                port=args.port or 0,
+                service=service,
+            )
+        elif args.export == "json":
+            exporter.export_json(
+                module.found,
+                filename=f"{export_file}.json",
+                target=args.target,
+                port=args.port or 0,
+                service=service,
+            )
+        elif args.export == "csv":
+            exporter.export_csv(
+                module.found,
+                filename=f"{export_file}.csv",
+            )
+        elif args.export == "html":
+            exporter.export_html(
+                module.found,
+                filename=f"{export_file}.html",
+                target=args.target,
+                port=args.port or 0,
+                service=service,
+            )
+    elif args.export and hasattr(module, "all_found") and module.all_found:
+        # MultiUserBrute case
+        exporter = ReportExporter()
+        export_file = args.export_file or "report"
+
+        if args.export == "all":
+            exporter.export_all(
+                module.all_found,
+                target=args.target,
+                port=args.port or 0,
+                service=service,
+            )
+        elif args.export == "json":
+            exporter.export_json(
+                module.all_found,
+                filename=f"{export_file}.json",
+                target=args.target,
+                port=args.port or 0,
+                service=service,
+            )
+        elif args.export == "csv":
+            exporter.export_csv(
+                module.all_found,
+                filename=f"{export_file}.csv",
+            )
+        elif args.export == "html":
+            exporter.export_html(
+                module.all_found,
+                filename=f"{export_file}.html",
+                target=args.target,
+                port=args.port or 0,
+                service=service,
+            )
 
 
 if __name__ == "__main__":

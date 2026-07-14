@@ -3,7 +3,7 @@
 import threading
 import queue
 import time
-from typing import Optional
+from typing import Optional, List
 from abc import ABC, abstractmethod
 from tqdm import tqdm
 
@@ -23,6 +23,8 @@ class BaseBrute(ABC):
         threads: int = 5,
         output_file: Optional[str] = None,
         verbose: bool = False,
+        delay: float = 0.0,
+        proxy: Optional[str] = None,
     ):
         self.target = target
         self.port = port
@@ -31,6 +33,8 @@ class BaseBrute(ABC):
         self.threads = threads
         self.output_file = output_file
         self.verbose = verbose
+        self.delay = delay
+        self.proxy = proxy
 
         self.password_queue = queue.Queue()
         self.found = []
@@ -70,6 +74,10 @@ class BaseBrute(ABC):
                 break
 
             try:
+                # Apply delay if configured
+                if self.delay > 0:
+                    time.sleep(self.delay)
+
                 success = self.try_login(self.username, password)
                 with self.lock:
                     self.attempts += 1
@@ -106,6 +114,10 @@ class BaseBrute(ABC):
         self.reporter.info(f"Target: {self.target}:{self.port}")
         self.reporter.info(f"Username: {self.username}")
         self.reporter.info(f"Threads: {self.threads}")
+        if self.delay > 0:
+            self.reporter.info(f"Delay: {self.delay}s between attempts")
+        if self.proxy:
+            self.reporter.info(f"Proxy: {self.proxy}")
 
         # Check for saved state
         if resume:
@@ -154,3 +166,54 @@ class BaseBrute(ABC):
 
         self.reporter.summary()
         self.reporter.close()
+
+
+class MultiUserBrute:
+    """Run brute-force for multiple usernames."""
+
+    def __init__(self, brute_class, target: str, port: int, usernames: List[str],
+                 wordlist: str, threads: int = 5, output_file: Optional[str] = None,
+                 verbose: bool = False, delay: float = 0.0, proxy: Optional[str] = None,
+                 **kwargs):
+        self.brute_class = brute_class
+        self.target = target
+        self.port = port
+        self.usernames = usernames
+        self.wordlist = wordlist
+        self.threads = threads
+        self.output_file = output_file
+        self.verbose = verbose
+        self.delay = delay
+        self.proxy = proxy
+        self.kwargs = kwargs
+        self.all_found = []
+
+    def run(self, resume: bool = False):
+        """Run brute-force for all usernames."""
+        print(f"[*] Running brute-force for {len(self.usernames)} usernames\n")
+
+        for i, username in enumerate(self.usernames, 1):
+            print(f"[*] [{i}/{len(self.usernames)}] Testing username: {username}")
+
+            module = self.brute_class(
+                target=self.target,
+                port=self.port,
+                username=username,
+                wordlist=self.wordlist,
+                threads=self.threads,
+                output_file=self.output_file,
+                verbose=self.verbose,
+                delay=self.delay,
+                proxy=self.proxy,
+                **self.kwargs,
+            )
+            module.run(resume=resume)
+
+            if module.found:
+                self.all_found.extend(module.found)
+
+        print(f"\n{'='*50}")
+        print(f"[*] TOTAL FOUND: {len(self.all_found)} credentials")
+        for user, pwd in self.all_found:
+            print(f"    {user}:{pwd}")
+        print(f"{'='*50}")

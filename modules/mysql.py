@@ -9,8 +9,9 @@ class MySQLBrute(BaseBrute):
 
     def __init__(self, target: str, port: int = 3306, username: str = "root",
                  wordlist: str = "wordlists/passwords.txt", threads: int = 5,
-                 output_file: str = None, verbose: bool = False):
-        super().__init__(target, port, username, wordlist, threads, output_file, verbose)
+                 output_file: str = None, verbose: bool = False,
+                 delay: float = 0.0, proxy: str = None):
+        super().__init__(target, port, username, wordlist, threads, output_file, verbose, delay, proxy)
         self.service = "MySQL"
 
     def try_login(self, username: str, password: str) -> bool:
