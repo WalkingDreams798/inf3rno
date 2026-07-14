@@ -56,7 +56,7 @@ python3 inf3rno.py -t scanme.org --auto
 
 ## Author
 
-WalkingDreams798 - removed@generic.com
+WalkingDreams798 
 
 ## Disclaimer
 
