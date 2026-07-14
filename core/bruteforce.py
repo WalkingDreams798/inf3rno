@@ -5,6 +5,7 @@ import queue
 import time
 from typing import Optional
 from abc import ABC, abstractmethod
+from tqdm import tqdm
 
 from core.reporter import Reporter
 
@@ -33,9 +34,11 @@ class BaseBrute(ABC):
         self.password_queue = queue.Queue()
         self.found = []
         self.attempts = 0
+        self.total_passwords = 0
         self.lock = threading.Lock()
         self.stop_event = threading.Event()
         self.reporter = Reporter(verbose=verbose, output_file=output_file)
+        self.progress_bar = None
 
     @abstractmethod
     def try_login(self, username: str, password: str) -> bool:
@@ -50,6 +53,7 @@ class BaseBrute(ABC):
                     password = line.strip()
                     if password:
                         self.password_queue.put(password)
+            self.total_passwords = self.password_queue.qsize()
             return True
         except FileNotFoundError:
             self.reporter.error(f"Wordlist not found: {self.wordlist}")
@@ -67,6 +71,8 @@ class BaseBrute(ABC):
                 success = self.try_login(self.username, password)
                 with self.lock:
                     self.attempts += 1
+                    if self.progress_bar:
+                        self.progress_bar.update(1)
 
                 if success:
                     with self.lock:
@@ -91,11 +97,19 @@ class BaseBrute(ABC):
         if not self.load_wordlist():
             return
 
-        total = self.password_queue.qsize()
-        self.reporter.info(f"Passwords loaded: {total}")
+        self.reporter.info(f"Passwords loaded: {self.total_passwords}")
         self.reporter.info("Starting brute-force...\n")
 
         self.reporter.start()
+
+        # Create progress bar
+        self.progress_bar = tqdm(
+            total=self.total_passwords,
+            desc="Progress",
+            unit="pwd",
+            ncols=80,
+            bar_format="{l_bar}{bar}| {n_fmt}/{total_fmt} [{elapsed}<{remaining}, {rate_fmt}]"
+        )
 
         threads = []
         for _ in range(self.threads):
@@ -108,6 +122,9 @@ class BaseBrute(ABC):
         self.stop_event.set()
         for t in threads:
             t.join()
+
+        if self.progress_bar:
+            self.progress_bar.close()
 
         self.reporter.summary()
         self.reporter.close()

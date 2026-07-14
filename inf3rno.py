@@ -13,6 +13,7 @@ from core.generator import PasswordGenerator
 from modules.ssh import SSHBrute
 from modules.ftp import FTPBrute
 from modules.http import HTTPBrute
+from modules.mysql import MySQLBrute
 
 
 def parse_args():
@@ -44,6 +45,7 @@ Examples:
     service.add_argument("--ssh", action="store_true", help="SSH mode (port 22)")
     service.add_argument("--ftp", action="store_true", help="FTP mode (port 21)")
     service.add_argument("--http", action="store_true", help="HTTP mode (port 80)")
+    service.add_argument("--mysql", action="store_true", help="MySQL mode (port 3306)")
     service.add_argument("--http-port", type=int, default=80, help="HTTP port (default: 80)")
     service.add_argument("--login-url", help="HTTP login URL for form-based auth")
     service.add_argument("--fail-string", default="Invalid", help="HTTP fail string")
@@ -130,9 +132,12 @@ def get_brute_module(args):
     elif args.http:
         service = "HTTP"
         port = port or args.http_port
+    elif args.mysql:
+        service = "MySQL"
+        port = port or 3306
 
     if not service:
-        print("[!] No service specified. Use --ssh, --ftp, --http, or --auto")
+        print("[!] No service specified. Use --ssh, --ftp, --http, --mysql, or --auto")
         return None, None
 
     if not check_port(args.target, port):
@@ -171,6 +176,16 @@ def get_brute_module(args):
             verbose=args.verbose,
             login_url=args.login_url,
             fail_string=args.fail_string,
+        )
+    elif service == "MySQL":
+        module = MySQLBrute(
+            target=args.target,
+            port=port,
+            username=args.user or "root",
+            wordlist=args.wordlist,
+            threads=args.threads,
+            output_file=args.output,
+            verbose=args.verbose,
         )
     else:
         print(f"[!] Unsupported service: {service}")
