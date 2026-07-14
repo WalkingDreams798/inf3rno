@@ -8,6 +8,7 @@ from abc import ABC, abstractmethod
 from tqdm import tqdm
 
 from core.reporter import Reporter
+from core.state import StateManager
 
 
 class BaseBrute(ABC):
@@ -38,6 +39,7 @@ class BaseBrute(ABC):
         self.lock = threading.Lock()
         self.stop_event = threading.Event()
         self.reporter = Reporter(verbose=verbose, output_file=output_file)
+        self.state_manager = StateManager()
         self.progress_bar = None
 
     @abstractmethod
@@ -88,11 +90,32 @@ class BaseBrute(ABC):
             finally:
                 self.password_queue.task_done()
 
-    def run(self):
+    def save_state(self):
+        """Save current attack state."""
+        self.state_manager.save_attack_state(
+            target=self.target,
+            port=self.port,
+            username=self.username,
+            wordlist=self.wordlist,
+            attempts=self.attempts,
+            found=self.found,
+        )
+
+    def run(self, resume: bool = False):
         """Run the brute-force attack."""
         self.reporter.info(f"Target: {self.target}:{self.port}")
         self.reporter.info(f"Username: {self.username}")
         self.reporter.info(f"Threads: {self.threads}")
+
+        # Check for saved state
+        if resume:
+            saved = self.state_manager.get_attack_state(
+                self.target, self.port, self.username
+            )
+            if saved:
+                self.reporter.info(f"Resuming from attempt {saved['attempts']}")
+                self.attempts = saved.get("attempts", 0)
+                self.found = saved.get("found", [])
 
         if not self.load_wordlist():
             return
@@ -125,6 +148,9 @@ class BaseBrute(ABC):
 
         if self.progress_bar:
             self.progress_bar.close()
+
+        # Save final state
+        self.save_state()
 
         self.reporter.summary()
         self.reporter.close()

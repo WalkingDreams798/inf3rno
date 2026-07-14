@@ -10,6 +10,7 @@ import os
 
 from core.utils import print_banner, check_port, detect_service, scan_common_ports
 from core.generator import PasswordGenerator
+from core.state import StateManager
 from modules.ssh import SSHBrute
 from modules.ftp import FTPBrute
 from modules.http import HTTPBrute
@@ -65,6 +66,8 @@ Examples:
     advanced = parser.add_argument_group("Advanced")
     advanced.add_argument("-T", "--threads", type=int, default=5, help="Number of threads (default: 5)")
     advanced.add_argument("--list", action="store_true", help="Scan and list common open ports")
+    advanced.add_argument("--resume", action="store_true", help="Resume previous attack")
+    advanced.add_argument("--list-states", action="store_true", help="List saved attack states")
 
     return parser.parse_args()
 
@@ -207,6 +210,19 @@ def handle_list_ports(args):
         print("[-] No open ports found.")
 
 
+def handle_list_states():
+    """Handle listing saved attack states."""
+    state_manager = StateManager()
+    states = state_manager.list_saved_states()
+
+    if states:
+        print("\n[+] Saved attack states:")
+        for state in states:
+            print(f"    {state['key']} - Attempts: {state['attempts']} - {state['timestamp']}")
+    else:
+        print("[-] No saved states found.")
+
+
 def main():
     """Main function."""
     print_banner()
@@ -216,6 +232,11 @@ def main():
     # Handle port listing
     if args.list:
         handle_list_ports(args)
+        return
+
+    # Handle list states
+    if args.list_states:
+        handle_list_states()
         return
 
     # Handle password generation
@@ -247,7 +268,7 @@ def main():
     print(f"[*] Starting brute-force attack...\n")
 
     # Run attack
-    module.run()
+    module.run(resume=args.resume)
 
 
 if __name__ == "__main__":
