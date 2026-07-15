@@ -7,6 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [3.0.0] - 2026-07-15
+
+### Added
+- WPA/WPA2 brute-force module (using aircrack-ng)
+- Kerberos brute-force module (AS-REQ authentication)
+- LDAP brute-force module (port 389)
+- LDAPS brute-force module (port 636)
+- Nmap integration for port scanning
+- Metasploit integration for exploitation
+- Kerberos username enumeration
+- LDAP user enumeration
+- WiFi network scanning
+- WPA handshake capture support
+
+### Changed
+- Version bumped to 3.0.0
+- Now supporting 15 protocols total
+
 ## [2.1.0] - 2026-07-15
 
 ### Added

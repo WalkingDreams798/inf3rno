@@ -7,7 +7,7 @@ with open("README.md", "r", encoding="utf-8") as f:
 
 setup(
     name="inf3rno",
-    version="2.1.0",
+    version="3.0.0",
     author="WalkingDreams798",
     author_email="anon@anon.com",
     description="Multi-Protocol Brute-Force Tool for Penetration Testing",

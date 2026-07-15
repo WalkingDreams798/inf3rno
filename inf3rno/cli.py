@@ -28,6 +28,9 @@ try:
     from .modules.smb import SMBBrute
     from .modules.vnc import VNCBrute
     from .modules.snmp import SNMPBrute
+    from .modules.wpa import WPABrute
+    from .modules.kerberos import KerberosBrute
+    from .modules.ldap import LDAPBrute, LDAPSBrute
     from .integrations.nmap import nmap_integration
     from .integrations.metasploit import metasploit_integration
 except ImportError:
@@ -51,6 +54,9 @@ except ImportError:
     from inf3rno.modules.smb import SMBBrute
     from inf3rno.modules.vnc import VNCBrute
     from inf3rno.modules.snmp import SNMPBrute
+    from inf3rno.modules.wpa import WPABrute
+    from inf3rno.modules.kerberos import KerberosBrute
+    from inf3rno.modules.ldap import LDAPBrute, LDAPSBrute
     from inf3rno.integrations.nmap import nmap_integration
     from inf3rno.integrations.metasploit import metasploit_integration
 
@@ -113,9 +119,17 @@ Examples:
     service.add_argument("--smb", action="store_true", help="SMB mode (port 445)")
     service.add_argument("--vnc", action="store_true", help="VNC mode (port 5900)")
     service.add_argument("--snmp", action="store_true", help="SNMP mode (port 161)")
+    service.add_argument("--wpa", action="store_true", help="WPA/WPA2 mode (requires handshake file)")
+    service.add_argument("--kerberos", action="store_true", help="Kerberos mode (port 88)")
+    service.add_argument("--ldap", action="store_true", help="LDAP mode (port 389)")
+    service.add_argument("--ldaps", action="store_true", help="LDAPS mode (port 636)")
     service.add_argument("--http-port", type=int, default=80, help="HTTP port (default: 80)")
     service.add_argument("--login-url", help="HTTP login URL for form-based auth")
     service.add_argument("--fail-string", default="Invalid", help="HTTP fail string")
+    service.add_argument("--handshake", help="WPA handshake file (.cap)")
+    service.add_argument("--domain", help="Domain for Kerberos/LDAP")
+    service.add_argument("--base-dn", help="Base DN for LDAP")
+    service.add_argument("--ldap-ssl", action="store_true", help="Use SSL for LDAP")
 
     generator = parser.add_argument_group("Password Generator")
     generator.add_argument("--gen-mask", help="Generate passwords with mask (?l=lower, ?u=upper, ?d=digit, ?s=special)")
@@ -290,9 +304,26 @@ def get_brute_module(args):
     elif args.snmp:
         service = "SNMP"
         port = port or 161
+    elif args.wpa:
+        service = "WPA"
+        port = port or 0  # WPA doesn't use port
+    elif args.kerberos:
+        service = "Kerberos"
+        port = port or 88
+    elif args.ldap:
+        service = "LDAP"
+        port = port or 389
+    elif args.ldaps:
+        service = "LDAPS"
+        port = port or 636
 
     if not service:
-        print("[!] No service specified. Use --ssh, --ftp, --http, --mysql, --smtp, --redis, --postgresql, --telnet, --smb, --vnc, --snmp, or --auto")
+        print("[!] No service specified. Use --ssh, --ftp, --http, --mysql, --smtp, --redis, --postgresql, --telnet, --smb, --vnc, --snmp, --wpa, --kerberos, --ldap, --ldaps, or --auto")
+        return None, None
+
+    # Skip port check for WPA (doesn't use TCP port)
+    if service != "WPA" and not check_port(args.target, port):
+        print(f"[!] Port {port} is closed or unreachable.")
         return None, None
 
     if not check_port(args.target, port):
@@ -354,6 +385,22 @@ def get_brute_module(args):
     elif service == "SNMP":
         module_class = SNMPBrute
         default_user = "public"
+    elif service == "WPA":
+        module_class = WPABrute
+        default_user = ""
+        extra_kwargs = {"handshake_file": args.handshake}
+    elif service == "Kerberos":
+        module_class = KerberosBrute
+        default_user = "administrator"
+        extra_kwargs = {"domain": args.domain}
+    elif service == "LDAP":
+        module_class = LDAPBrute
+        default_user = "admin"
+        extra_kwargs = {"base_dn": args.base_dn, "use_ssl": args.ldap_ssl}
+    elif service == "LDAPS":
+        module_class = LDAPSBrute
+        default_user = "admin"
+        extra_kwargs = {"base_dn": args.base_dn}
     else:
         print(f"[!] Unsupported service: {service}")
         return None, None

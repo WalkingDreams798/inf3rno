@@ -1,6 +1,6 @@
 """Inf3rno - Multi-Protocol Brute-Force Tool."""
 
-__version__ = "2.1.0"
+__version__ = "3.0.0"
 __author__ = "WalkingDreams798"
 
 # Lazy imports - only import when accessed
@@ -56,6 +56,18 @@ def __getattr__(name):
     elif name == "SNMPBrute":
         from .modules.snmp import SNMPBrute
         return SNMPBrute
+    elif name == "WPABrute":
+        from .modules.wpa import WPABrute
+        return WPABrute
+    elif name == "KerberosBrute":
+        from .modules.kerberos import KerberosBrute
+        return KerberosBrute
+    elif name == "LDAPBrute":
+        from .modules.ldap import LDAPBrute
+        return LDAPBrute
+    elif name == "LDAPSBrute":
+        from .modules.ldap import LDAPSBrute
+        return LDAPSBrute
     raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
 
 __all__ = [
@@ -75,4 +87,8 @@ __all__ = [
     "SMBBrute",
     "VNCBrute",
     "SNMPBrute",
+    "WPABrute",
+    "KerberosBrute",
+    "LDAPBrute",
+    "LDAPSBrute",
 ]
