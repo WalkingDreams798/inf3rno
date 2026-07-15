@@ -25,6 +25,9 @@ try:
     from .modules.redis import RedisBrute
     from .modules.postgresql import PostgreSQLBrute
     from .modules.telnet import TelnetBrute
+    from .modules.smb import SMBBrute
+    from .modules.vnc import VNCBrute
+    from .modules.snmp import SNMPBrute
 except ImportError:
     # Direct execution - add parent to path
     sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -43,6 +46,9 @@ except ImportError:
     from modules.redis import RedisBrute
     from modules.postgresql import PostgreSQLBrute
     from modules.telnet import TelnetBrute
+    from modules.smb import SMBBrute
+    from modules.vnc import VNCBrute
+    from modules.snmp import SNMPBrute
 
 
 def parse_args():
@@ -92,6 +98,9 @@ Examples:
     service.add_argument("--redis", action="store_true", help="Redis mode (port 6379)")
     service.add_argument("--postgresql", action="store_true", help="PostgreSQL mode (port 5432)")
     service.add_argument("--telnet", action="store_true", help="Telnet mode (port 23)")
+    service.add_argument("--smb", action="store_true", help="SMB mode (port 445)")
+    service.add_argument("--vnc", action="store_true", help="VNC mode (port 5900)")
+    service.add_argument("--snmp", action="store_true", help="SNMP mode (port 161)")
     service.add_argument("--http-port", type=int, default=80, help="HTTP port (default: 80)")
     service.add_argument("--login-url", help="HTTP login URL for form-based auth")
     service.add_argument("--fail-string", default="Invalid", help="HTTP fail string")
@@ -260,9 +269,18 @@ def get_brute_module(args):
     elif args.telnet:
         service = "Telnet"
         port = port or 23
+    elif args.smb:
+        service = "SMB"
+        port = port or 445
+    elif args.vnc:
+        service = "VNC"
+        port = port or 5900
+    elif args.snmp:
+        service = "SNMP"
+        port = port or 161
 
     if not service:
-        print("[!] No service specified. Use --ssh, --ftp, --http, --mysql, --smtp, --redis, --postgresql, --telnet, or --auto")
+        print("[!] No service specified. Use --ssh, --ftp, --http, --mysql, --smtp, --redis, --postgresql, --telnet, --smb, --vnc, --snmp, or --auto")
         return None, None
 
     if not check_port(args.target, port):
@@ -315,6 +333,15 @@ def get_brute_module(args):
     elif service == "Telnet":
         module_class = TelnetBrute
         default_user = "admin"
+    elif service == "SMB":
+        module_class = SMBBrute
+        default_user = "Administrator"
+    elif service == "VNC":
+        module_class = VNCBrute
+        default_user = ""
+    elif service == "SNMP":
+        module_class = SNMPBrute
+        default_user = "public"
     else:
         print(f"[!] Unsupported service: {service}")
         return None, None

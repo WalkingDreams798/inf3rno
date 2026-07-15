@@ -1,6 +1,6 @@
 """Inf3rno - Multi-Protocol Brute-Force Tool."""
 
-__version__ = "2.0.0"
+__version__ = "2.1.0"
 __author__ = "WalkingDreams798"
 
 from .core.bruteforce import BaseBrute, MultiUserBrute
@@ -15,6 +15,9 @@ from .modules.smtp import SMTPBrute
 from .modules.redis import RedisBrute
 from .modules.postgresql import PostgreSQLBrute
 from .modules.telnet import TelnetBrute
+from .modules.smb import SMBBrute
+from .modules.vnc import VNCBrute
+from .modules.snmp import SNMPBrute
 
 __all__ = [
     "BaseBrute",
@@ -30,4 +33,7 @@ __all__ = [
     "RedisBrute",
     "PostgreSQLBrute",
     "TelnetBrute",
+    "SMBBrute",
+    "VNCBrute",
+    "SNMPBrute",
 ]
