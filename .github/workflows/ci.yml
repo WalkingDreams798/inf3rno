@@ -32,9 +32,9 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install -r requirements.txt
-        pip install pytest
-        pip install -e .
+        pip install --break-system-packages -r requirements.txt
+        pip install --break-system-packages pytest
+        pip install --break-system-packages -e .
 
     - name: Run tests
       run: |
@@ -55,7 +55,7 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install flake8
+        pip install --break-system-packages flake8
 
     - name: Lint with flake8 (errors only)
       run: |
@@ -77,7 +77,7 @@ jobs:
     - name: Install build tools
       run: |
         python -m pip install --upgrade pip
-        pip install build
+        pip install --break-system-packages build
 
     - name: Build package
       run: |
