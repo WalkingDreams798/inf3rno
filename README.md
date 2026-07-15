@@ -36,31 +36,65 @@ Progress:  45%|███████████▌                 | 450/1000 [
 ### TUI Dashboard
 
 ```
-┌─────────────────────────────────────────────────────────────┐
-│                                                             │
-│    _____ _____ ____  __  __ ____  _     ___ _____ ____     │
-│   |_   _| ____|  _ \|  \/  |  _ \| |   |_ _|_   _/ ___|   │
-│     | | |  _| | |_) | |\/| | |_) | |    | |  | | \___ \   │
-│     | | | |___|  _ <| |  | |  __/| |___ | |  | |  ___) |  │
-│     |_| |_____|_| \_\_|  |_|_|   |_____|___| |_| |____/   │
-│                                                             │
-│    [ TUI Dashboard - Multi-Protocol Brute-Force Tool ]      │
-│                                                             │
-│  ┌─ Main Menu ─────────────────────────────────────────┐   │
-│  │ No  │ Option              │ Description              │   │
-│  ├─────┼─────────────────────┼──────────────────────────┤   │
-│  │ 1   │ New Attack          │ Start a new brute-force  │   │
-│  │ 2   │ View Attacks        │ List all attacks         │   │
-│  │ 3   │ View Credentials    │ Show found credentials   │   │
-│  │ 4   │ Generate Wordlist   │ Create smart wordlist    │   │
-│  │ 5   │ Scan Ports          │ Scan common ports        │   │
-│  │ 6   │ Settings            │ Configure settings       │   │
-│  │ 0   │ Exit                │ Exit dashboard           │   │
-│  └─────┴─────────────────────┴──────────────────────────┘   │
-│                                                             │
-│  Select option: 1                                           │
-│                                                             │
-└─────────────────────────────────────────────────────────────┘
+    _____ _____ ____  __  __ ____  _     ___ _____ ____
+   |_   _| ____|  _ \|  \/  |  _ \| |   |_ _|_   _/ ___|
+     | | |  _| | |_) | |\/| | |_) | |    | |  | | \___ \
+     | | | |___|  _ <| |  | |  __/| |___ | |  | |  ___) |
+     |_| |_____|_| \_\_|  |_|_|   |_____|___| |_| |____/
+
+    [ TUI Dashboard - Multi-Protocol Brute-Force Tool ]
+
+                          Main Menu
+╭───────┬───────────────────┬────────────────────────────────╮
+│ No    │ Option            │ Description                    │
+├───────┼───────────────────┼────────────────────────────────┤
+│ 1     │ New Attack        │ Start a new brute-force attack │
+│ 2     │ View Attacks      │ List all current attacks       │
+│ 3     │ View Credentials  │ Show found credentials         │
+│ 4     │ Generate Wordlist │ Create smart wordlist          │
+│ 5     │ Scan Ports        │ Scan common ports on target    │
+│ 6     │ Settings          │ Configure default settings     │
+│ 0     │ Exit              │ Exit the dashboard             │
+╰───────┴───────────────────┴────────────────────────────────╯
+
+         Available Services
+
+  No      Service      Default Port
+ ───────────────────────────────────
+  1       SSH          22
+  2       FTP          21
+  3       HTTP         80
+  4       MySQL        3306
+  5       SMTP         587
+  6       Redis        6379
+  7       PostgreSQL   5432
+  8       Telnet       23
+  9       SMB          445
+  10      VNC          5900
+  11      SNMP         161
+  12      RDP          3389
+```
+
+### Attack Progress
+
+```
+[*] Target: 192.168.1.1:22
+[*] Username: admin
+[*] Threads: 5
+[*] Passwords loaded: 1000
+[*] Starting brute-force...
+
+[+] FOUND: admin:password123
+
+==================================================
+[*] SUMMARY
+==================================================
+Time elapsed: 45.23s
+Attempts: 452
+
+[+] Found 1 valid credential(s):
+    admin:password123
+==================================================
 ```
 
 ### REST API
