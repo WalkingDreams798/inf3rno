@@ -1,7 +1,7 @@
 """SSH brute-force module."""
 
 import paramiko
-from core.bruteforce import BaseBrute
+from inf3rno.core.bruteforce import BaseBrute
 
 
 class SSHBrute(BaseBrute):

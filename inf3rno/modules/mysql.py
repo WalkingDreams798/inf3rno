@@ -1,7 +1,7 @@
 """MySQL brute-force module."""
 
 import pymysql
-from core.bruteforce import BaseBrute
+from inf3rno.core.bruteforce import BaseBrute
 
 
 class MySQLBrute(BaseBrute):

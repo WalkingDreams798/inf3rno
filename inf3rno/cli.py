@@ -31,24 +31,24 @@ try:
 except ImportError:
     # Direct execution - add parent to path
     sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-    from core.utils import print_banner, check_port, detect_service, scan_common_ports
-    from core.generator import PasswordGenerator
-    from core.smart_wordlist import SmartWordlist
-    from core.state import StateManager
-    from core.reporter import ReportExporter
-    from core.validator import CredentialValidator
-    from core.plugin import plugin_manager, load_plugins
-    from modules.ssh import SSHBrute
-    from modules.ftp import FTPBrute
-    from modules.http import HTTPBrute
-    from modules.mysql import MySQLBrute
-    from modules.smtp import SMTPBrute
-    from modules.redis import RedisBrute
-    from modules.postgresql import PostgreSQLBrute
-    from modules.telnet import TelnetBrute
-    from modules.smb import SMBBrute
-    from modules.vnc import VNCBrute
-    from modules.snmp import SNMPBrute
+    from inf3rno.core.utils import print_banner, check_port, detect_service, scan_common_ports
+    from inf3rno.core.generator import PasswordGenerator
+    from inf3rno.core.smart_wordlist import SmartWordlist
+    from inf3rno.core.state import StateManager
+    from inf3rno.core.reporter import ReportExporter
+    from inf3rno.core.validator import CredentialValidator
+    from inf3rno.core.plugin import plugin_manager, load_plugins
+    from inf3rno.modules.ssh import SSHBrute
+    from inf3rno.modules.ftp import FTPBrute
+    from inf3rno.modules.http import HTTPBrute
+    from inf3rno.modules.mysql import MySQLBrute
+    from inf3rno.modules.smtp import SMTPBrute
+    from inf3rno.modules.redis import RedisBrute
+    from inf3rno.modules.postgresql import PostgreSQLBrute
+    from inf3rno.modules.telnet import TelnetBrute
+    from inf3rno.modules.smb import SMBBrute
+    from inf3rno.modules.vnc import VNCBrute
+    from inf3rno.modules.snmp import SNMPBrute
 
 
 def parse_args():
@@ -367,7 +367,7 @@ def get_brute_module(args):
         )
     else:
         # Multiple usernames
-        from core.bruteforce import MultiUserBrute
+        from inf3rno.core.bruteforce import MultiUserBrute
         module = MultiUserBrute(
             brute_class=module_class,
             target=args.target,

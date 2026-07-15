@@ -1,7 +1,7 @@
 """HTTP brute-force module."""
 
 import requests
-from core.bruteforce import BaseBrute
+from inf3rno.core.bruteforce import BaseBrute
 
 
 class HTTPBrute(BaseBrute):

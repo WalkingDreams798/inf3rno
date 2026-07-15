@@ -2,7 +2,7 @@
 
 import socket
 import ssl
-from core.bruteforce import BaseBrute
+from inf3rno.core.bruteforce import BaseBrute
 
 
 class RDPBrute(BaseBrute):

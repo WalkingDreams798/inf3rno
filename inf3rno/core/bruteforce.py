@@ -7,8 +7,8 @@ from typing import Optional, List
 from abc import ABC, abstractmethod
 from tqdm import tqdm
 
-from core.reporter import Reporter
-from core.state import StateManager
+from inf3rno.core.reporter import Reporter
+from inf3rno.core.state import StateManager
 
 
 class RateLimiter:

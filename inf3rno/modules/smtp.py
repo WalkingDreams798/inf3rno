@@ -3,7 +3,7 @@
 import smtplib
 import socket
 from email.mime.text import MIMEText
-from core.bruteforce import BaseBrute
+from inf3rno.core.bruteforce import BaseBrute
 
 
 class SMTPBrute(BaseBrute):

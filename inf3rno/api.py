@@ -16,17 +16,17 @@ from pydantic import BaseModel, Field
 # Add parent to path for imports
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from core.utils import check_port, detect_service, scan_common_ports
-from core.generator import PasswordGenerator
-from core.smart_wordlist import SmartWordlist
-from modules.ssh import SSHBrute
-from modules.ftp import FTPBrute
-from modules.http import HTTPBrute
-from modules.mysql import MySQLBrute
-from modules.smtp import SMTPBrute
-from modules.redis import RedisBrute
-from modules.postgresql import PostgreSQLBrute
-from modules.telnet import TelnetBrute
+from inf3rno.core.utils import check_port, detect_service, scan_common_ports
+from inf3rno.core.generator import PasswordGenerator
+from inf3rno.core.smart_wordlist import SmartWordlist
+from inf3rno.modules.ssh import SSHBrute
+from inf3rno.modules.ftp import FTPBrute
+from inf3rno.modules.http import HTTPBrute
+from inf3rno.modules.mysql import MySQLBrute
+from inf3rno.modules.smtp import SMTPBrute
+from inf3rno.modules.redis import RedisBrute
+from inf3rno.modules.postgresql import PostgreSQLBrute
+from inf3rno.modules.telnet import TelnetBrute
 
 
 # Pydantic Models

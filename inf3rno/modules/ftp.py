@@ -2,7 +2,7 @@
 
 import ftplib
 import socket
-from core.bruteforce import BaseBrute
+from inf3rno.core.bruteforce import BaseBrute
 
 
 class FTPBrute(BaseBrute):

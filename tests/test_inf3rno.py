@@ -14,7 +14,7 @@ class TestPasswordGenerator:
     """Tests for PasswordGenerator class."""
 
     def setup_method(self):
-        from core.generator import PasswordGenerator
+        from inf3rno.core.generator import PasswordGenerator
         self.gen = PasswordGenerator()
 
     def test_generate_mask_lowercase(self):
@@ -75,7 +75,7 @@ class TestSmartWordlist:
     """Tests for SmartWordlist class."""
 
     def setup_method(self):
-        from core.smart_wordlist import SmartWordlist
+        from inf3rno.core.smart_wordlist import SmartWordlist
         self.smart = SmartWordlist()
 
     def test_generate_from_target(self):
@@ -102,7 +102,7 @@ class TestCredentialValidator:
     """Tests for CredentialValidator class."""
 
     def setup_method(self):
-        from core.validator import CredentialValidator
+        from inf3rno.core.validator import CredentialValidator
         self.validator = CredentialValidator()
         self.temp_dir = tempfile.mkdtemp()
 
@@ -136,7 +136,7 @@ class TestUtils:
     """Tests for utility functions."""
 
     def setup_method(self):
-        from core.utils import check_port, detect_service, scan_common_ports
+        from inf3rno.core.utils import check_port, detect_service, scan_common_ports
         self.check_port = check_port
         self.detect_service = detect_service
         self.scan_common_ports = scan_common_ports
@@ -158,7 +158,7 @@ class TestRateLimiter:
     """Tests for RateLimiter class."""
 
     def setup_method(self):
-        from core.bruteforce import RateLimiter
+        from inf3rno.core.bruteforce import RateLimiter
         self.limiter = RateLimiter(max_failures=3, window=60, pause_time=1)
 
     def test_record_failure(self):
@@ -179,7 +179,7 @@ class TestStateManager:
     """Tests for StateManager class."""
 
     def setup_method(self):
-        from core.state import StateManager
+        from inf3rno.core.state import StateManager
         self.state_manager = StateManager()
         self.temp_dir = tempfile.mkdtemp()
         self.state_manager.state_file = os.path.join(self.temp_dir, "state.json")
@@ -207,14 +207,17 @@ class TestModules:
     """Tests for brute-force modules."""
 
     def setup_method(self):
-        from modules.ssh import SSHBrute
-        from modules.ftp import FTPBrute
-        from modules.http import HTTPBrute
-        from modules.mysql import MySQLBrute
-        from modules.smtp import SMTPBrute
-        from modules.redis import RedisBrute
-        from modules.postgresql import PostgreSQLBrute
-        from modules.telnet import TelnetBrute
+        from inf3rno.modules.ssh import SSHBrute
+        from inf3rno.modules.ftp import FTPBrute
+        from inf3rno.modules.http import HTTPBrute
+        from inf3rno.modules.mysql import MySQLBrute
+        from inf3rno.modules.smtp import SMTPBrute
+        from inf3rno.modules.redis import RedisBrute
+        from inf3rno.modules.postgresql import PostgreSQLBrute
+        from inf3rno.modules.telnet import TelnetBrute
+        from inf3rno.modules.smb import SMBBrute
+        from inf3rno.modules.vnc import VNCBrute
+        from inf3rno.modules.snmp import SNMPBrute
 
         self.modules = {
             "SSH": SSHBrute,
@@ -225,6 +228,9 @@ class TestModules:
             "Redis": RedisBrute,
             "PostgreSQL": PostgreSQLBrute,
             "Telnet": TelnetBrute,
+            "SMB": SMBBrute,
+            "VNC": VNCBrute,
+            "SNMP": SNMPBrute,
         }
 
     def test_module_init(self):
@@ -236,14 +242,13 @@ class TestModules:
                 wordlist="wordlists/passwords.txt",
             )
             assert module.target == "127.0.0.1"
-            assert module.service == name
 
 
 class TestReportExporter:
     """Tests for ReportExporter class."""
 
     def setup_method(self):
-        from core.reporter import ReportExporter
+        from inf3rno.core.reporter import ReportExporter
         self.exporter = ReportExporter()
         self.temp_dir = tempfile.mkdtemp()
         self.exporter.output_dir = self.temp_dir

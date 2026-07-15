@@ -1,7 +1,7 @@
 """PostgreSQL brute-force module."""
 
 import psycopg2
-from core.bruteforce import BaseBrute
+from inf3rno.core.bruteforce import BaseBrute
 
 
 class PostgreSQLBrute(BaseBrute):
