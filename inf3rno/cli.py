@@ -16,6 +16,7 @@ try:
     from .core.state import StateManager
     from .core.reporter import ReportExporter
     from .core.validator import CredentialValidator
+    from .core.plugin import plugin_manager, load_plugins
     from .modules.ssh import SSHBrute
     from .modules.ftp import FTPBrute
     from .modules.http import HTTPBrute
@@ -33,6 +34,7 @@ except ImportError:
     from core.state import StateManager
     from core.reporter import ReportExporter
     from core.validator import CredentialValidator
+    from core.plugin import plugin_manager, load_plugins
     from modules.ssh import SSHBrute
     from modules.ftp import FTPBrute
     from modules.http import HTTPBrute
@@ -68,6 +70,8 @@ Examples:
     mode.add_argument("--api", action="store_true", help="Launch REST API server")
     mode.add_argument("--api-host", default="0.0.0.0", help="API server host (default: 0.0.0.0)")
     mode.add_argument("--api-port", type=int, default=8000, help="API server port (default: 8000)")
+    mode.add_argument("--list-plugins", action="store_true", help="List installed plugins")
+    mode.add_argument("--plugin-dir", default="plugins", help="Plugins directory (default: plugins)")
 
     target = parser.add_argument_group("Target")
     target.add_argument("-t", "--target", help="Target IP or hostname")
@@ -384,9 +388,24 @@ def handle_list_states():
         print("[-] No saved states found.")
 
 
+def handle_list_plugins():
+    """Handle listing installed plugins."""
+    plugins = plugin_manager.list_plugins()
+
+    if plugins:
+        print("\n[+] Installed plugins:")
+        for plugin in plugins:
+            print(f"    {plugin['name']} v{plugin['version']} - {plugin['description']}")
+    else:
+        print("[-] No plugins installed.")
+
+
 def main():
     """Main function."""
     args = parse_args()
+
+    # Load plugins
+    load_plugins(args.plugin_dir)
 
     # Handle TUI mode
     if args.tui:
@@ -399,6 +418,11 @@ def main():
         from .api import run_api
         print(f"[*] Starting API server on {args.api_host}:{args.api_port}")
         run_api(host=args.api_host, port=args.api_port)
+        return
+
+    # Handle list plugins
+    if args.list_plugins:
+        handle_list_plugins()
         return
 
     print_banner()
