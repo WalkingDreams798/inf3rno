@@ -1,6 +1,6 @@
 """Inf3rno - Multi-Protocol Brute-Force Tool."""
 
-__version__ = "1.0.0"
+__version__ = "2.0.0"
 __author__ = "WalkingDreams798"
 
 from .core.bruteforce import BaseBrute, MultiUserBrute

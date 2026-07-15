@@ -57,8 +57,17 @@ Examples:
   %(prog)s -t scanme.org --auto
   %(prog)s -t 192.168.1.1 --ssh -U users.txt -w passwords.txt --delay 0.5
   %(prog)s -t 192.168.1.1 --ssh -u admin -w passwords.txt --proxy socks5://127.0.0.1:9050
+  %(prog)s --tui                              # Launch TUI dashboard
+  %(prog)s --api --api-port 8000              # Launch REST API server
         """
     )
+
+    # Mode selection
+    mode = parser.add_argument_group("Mode")
+    mode.add_argument("--tui", action="store_true", help="Launch TUI dashboard")
+    mode.add_argument("--api", action="store_true", help="Launch REST API server")
+    mode.add_argument("--api-host", default="0.0.0.0", help="API server host (default: 0.0.0.0)")
+    mode.add_argument("--api-port", type=int, default=8000, help="API server port (default: 8000)")
 
     target = parser.add_argument_group("Target")
     target.add_argument("-t", "--target", help="Target IP or hostname")
@@ -377,9 +386,22 @@ def handle_list_states():
 
 def main():
     """Main function."""
-    print_banner()
-
     args = parse_args()
+
+    # Handle TUI mode
+    if args.tui:
+        from .tui import main as tui_main
+        tui_main()
+        return
+
+    # Handle API mode
+    if args.api:
+        from .api import run_api
+        print(f"[*] Starting API server on {args.api_host}:{args.api_port}")
+        run_api(host=args.api_host, port=args.api_port)
+        return
+
+    print_banner()
 
     # Handle port listing
     if args.list:
