@@ -6,6 +6,10 @@ env/
 venv/
 .venv/
 output/*.txt
+output/*.json
+output/*.html
+output/*.csv
+output/.state.json
 *.log
 .idea/
 .vscode/
@@ -14,3 +18,11 @@ output/*.txt
 *~
 .DS_Store
 Thumbs.db
+*.egg-info/
+*.egg
+dist/
+build/
+.pytest_cache/
+.tox/
+htmlcov/
+.coverage
