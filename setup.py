@@ -5,12 +5,9 @@ from setuptools import setup, find_packages
 with open("README.md", "r", encoding="utf-8") as f:
     long_description = f.read()
 
-with open("requirements.txt", "r", encoding="utf-8") as f:
-    requirements = [line.strip() for line in f if line.strip() and not line.startswith("#")]
-
 setup(
     name="inf3rno",
-    version="1.0.0",
+    version="2.1.0",
     author="WalkingDreams798",
     author_email="anon@anon.com",
     description="Multi-Protocol Brute-Force Tool for Penetration Testing",
@@ -32,7 +29,20 @@ setup(
         "Operating System :: OS Independent",
     ],
     python_requires=">=3.8",
-    install_requires=requirements,
+    install_requires=[
+        "paramiko>=3.0",
+        "requests>=2.31",
+        "rich>=13.0",
+        "colorama>=0.4",
+        "tqdm>=4.65",
+        "urllib3>=2.0",
+        "pymysql>=1.1",
+        "pysocks>=1.7",
+        "psycopg2-binary>=2.9",
+        "fastapi>=0.100.0",
+        "uvicorn>=0.23.0",
+        "pydantic>=2.0",
+    ],
     entry_points={
         "console_scripts": [
             "inf3rno=inf3rno:main",
