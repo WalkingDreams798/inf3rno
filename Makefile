@@ -1,7 +1,7 @@
 # Inf3rno Makefile
 # Multi-Protocol Brute-Force Tool
 
-.PHONY: install uninstall clean test help
+.PHONY: install uninstall clean test help docker-build docker-run docker-api docker-stop docker-clean
 
 PYTHON = python3
 PIP = $(PYTHON) -m pip
@@ -72,6 +72,37 @@ deps: ## Show dependencies
 install-deps: ## Install development dependencies
 	$(PIP) install --break-system-packages pytest flake8 black
 
+# Docker commands
+docker-build: ## Build Docker image
+	@echo "[*] Building Docker image..."
+	docker build -t inf3rno:latest .
+	@echo "[+] Docker image built!"
+
+docker-run: ## Run Inf3rno in Docker (usage: make docker-run ARGS="-t 192.168.1.1 --ssh")
+	docker run --rm -it inf3rno:latest $(ARGS)
+
+docker-api: ## Start API server in Docker
+	@echo "[*] Starting API server..."
+	docker-compose up -d inf3rno-api
+	@echo "[+] API server started on http://localhost:8000"
+	@echo "[*] API docs: http://localhost:8000/docs"
+
+docker-stop: ## Stop all Docker containers
+	@echo "[*] Stopping containers..."
+	docker-compose down
+	@echo "[+] Containers stopped!"
+
+docker-clean: ## Remove Docker images and volumes
+	@echo "[*] Cleaning Docker resources..."
+	docker-compose down -v --rmi all
+	@echo "[+] Docker resources cleaned!"
+
+docker-shell: ## Open shell in Inf3rno container
+	docker run --rm -it --entrypoint /bin/bash inf3rno:latest
+
+docker-ps: ## Show running Docker containers
+	docker-compose ps
+
 help-commands: ## Show usage examples
 	@echo ""
 	@echo "Usage Examples:"
@@ -79,4 +110,7 @@ help-commands: ## Show usage examples
 	@echo "  make run ARGS='-t 192.168.1.1 --ssh'  # Run SSH brute-force"
 	@echo "  make generate ARGS='--smart -t host'  # Generate wordlist"
 	@echo "  make clean                            # Clean artifacts"
+	@echo "  make docker-build                     # Build Docker image"
+	@echo "  make docker-run ARGS='--ssh -t host'  # Run in Docker"
+	@echo "  make docker-api                       # Start API server"
 	@echo ""

@@ -1,0 +1,60 @@
+version: '3.8'
+
+services:
+  # Main Inf3rno tool
+  inf3rno:
+    build: .
+    container_name: inf3rno
+    volumes:
+      - ./output:/app/output
+      - ./wordlists:/app/wordlists
+    networks:
+      - inf3rno-net
+    restart: unless-stopped
+
+  # Inf3rno API server
+  inf3rno-api:
+    build: .
+    container_name: inf3rno-api
+    command: ["--api", "--api-host", "0.0.0.0", "--api-port", "8000"]
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./output:/app/output
+      - ./wordlists:/app/wordlists
+    networks:
+      - inf3rno-net
+    restart: unless-stopped
+
+  # Redis for caching (optional)
+  redis:
+    image: redis:7-alpine
+    container_name: inf3rno-redis
+    ports:
+      - "6379:6379"
+    networks:
+      - inf3rno-net
+    restart: unless-stopped
+
+  # PostgreSQL for storage (optional)
+  postgres:
+    image: postgres:15-alpine
+    container_name: inf3rno-postgres
+    environment:
+      POSTGRES_DB: inf3rno
+      POSTGRES_USER: inf3rno
+      POSTGRES_PASSWORD: inf3rno
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    networks:
+      - inf3rno-net
+    restart: unless-stopped
+
+volumes:
+  postgres-data:
+
+networks:
+  inf3rno-net:
+    driver: bridge
