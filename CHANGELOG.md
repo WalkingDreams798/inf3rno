@@ -7,13 +7,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.1.0] - 2026-07-15
+
 ### Added
+- SMB brute-force module (port 445)
+- VNC brute-force module (port 5900)
+- SNMP community string testing (port 161)
+- Wordlist downloader script
 - GitHub Actions CI/CD workflows
 - Security scanning workflow
 - Release automation workflow
 - Issue and PR templates
 - Contributing guidelines
 - Changelog
+
+### Fixed
+- Package structure reorganized (core/ and modules/ inside inf3rno/)
+- All internal imports updated to use full package path
+- CI workflows fixed for Ubuntu 24.04+ (PEP 668)
+- Build process fixed for isolated environments
+
+### Changed
+- Version bumped to 2.1.0
+- README updated with dashboard screenshots
 
 ## [2.0.0] - 2024-01-15
 
