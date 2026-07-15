@@ -28,6 +28,8 @@ try:
     from .modules.smb import SMBBrute
     from .modules.vnc import VNCBrute
     from .modules.snmp import SNMPBrute
+    from .integrations.nmap import nmap_integration
+    from .integrations.metasploit import metasploit_integration
 except ImportError:
     # Direct execution - add parent to path
     sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -49,6 +51,8 @@ except ImportError:
     from inf3rno.modules.smb import SMBBrute
     from inf3rno.modules.vnc import VNCBrute
     from inf3rno.modules.snmp import SNMPBrute
+    from inf3rno.integrations.nmap import nmap_integration
+    from inf3rno.integrations.metasploit import metasploit_integration
 
 
 def parse_args():
@@ -78,6 +82,14 @@ Examples:
     mode.add_argument("--api-port", type=int, default=8000, help="API server port (default: 8000)")
     mode.add_argument("--list-plugins", action="store_true", help="List installed plugins")
     mode.add_argument("--plugin-dir", default="plugins", help="Plugins directory (default: plugins)")
+    mode.add_argument("--nmap", action="store_true", help="Run Nmap scan on target")
+    mode.add_argument("--nmap-service", action="store_true", help="Nmap service detection scan")
+    mode.add_argument("--nmap-full", action="store_true", help="Nmap full port scan")
+    mode.add_argument("--nmap-vuln", action="store_true", help="Nmap vulnerability scan")
+    mode.add_argument("--nmap-bruteforce", action="store_true", help="Scan and prepare for brute-force")
+    mode.add_argument("--msf", action="store_true", help="Use Metasploit modules")
+    mode.add_argument("--msf-exploit", help="Metasploit exploit module to use")
+    mode.add_argument("--check-integrations", action="store_true", help="Check available integrations")
 
     target = parser.add_argument_group("Target")
     target.add_argument("-t", "--target", help="Target IP or hostname")
@@ -427,6 +439,93 @@ def handle_list_plugins():
         print("[-] No plugins installed.")
 
 
+def handle_check_integrations():
+    """Check available integrations."""
+    print("\n[+] Integration Status:")
+
+    # Check Nmap
+    if nmap_integration.is_available():
+        print(f"    [✓] Nmap: {nmap_integration.nmap_path}")
+    else:
+        print("    [✗] Nmap: Not found")
+
+    # Check Metasploit
+    if metasploit_integration.is_available():
+        print(f"    [✓] Metasploit: {metasploit_integration.msfconsole_path}")
+    else:
+        print("    [✗] Metasploit: Not found")
+
+
+def handle_nmap_scan(args):
+    """Handle Nmap scan."""
+    if not nmap_integration.is_available():
+        print("[!] Nmap not found. Install nmap first.")
+        return
+
+    print(f"[*] Running Nmap scan on {args.target}...")
+
+    if args.nmap_service:
+        result = nmap_integration.service_scan(args.target)
+    elif args.nmap_full:
+        result = nmap_integration.full_scan(args.target)
+    elif args.nmap_vuln:
+        result = nmap_integration.vuln_scan(args.target)
+    elif args.nmap_bruteforce:
+        services = nmap_integration.scan_to_bruteforce(args.target)
+        if services:
+            print(f"\n[+] Found {len(services)} brute-forceable services:")
+            for svc in services:
+                print(f"    {svc['host']}:{svc['port']} ({svc['service']}) -> {svc['module']}")
+        return
+    else:
+        result = nmap_integration.quick_scan(args.target)
+
+    # Print results
+    if "error" in result:
+        print(f"[!] Error: {result['error']}")
+        return
+
+    print(f"\n[+] Scan Results:")
+    for host in result.get("hosts", []):
+        print(f"\n  Host: {host.get('ip', 'unknown')}")
+        print(f"  State: {host.get('state', 'unknown')}")
+
+        for port in host.get("ports", []):
+            service = port.get("service", {})
+            print(f"    {port['port']}/{port['protocol']} - {service.get('name', 'unknown')}")
+            if service.get("product"):
+                print(f"      Product: {service['product']} {service.get('version', '')}")
+
+
+def handle_msf_exploit(args):
+    """Handle Metasploit exploit."""
+    if not metasploit_integration.is_available():
+        print("[!] Metasploit not found. Install metasploit first.")
+        return
+
+    if not args.msf_exploit:
+        print("[!] Please specify exploit module with --msf-exploit")
+        return
+
+    print(f"[*] Running Metasploit module: {args.msf_exploit}")
+
+    # This is a simplified example
+    # In production, you'd want more sophisticated module execution
+    result = metasploit_integration._run_module(
+        args.msf_exploit,
+        {"RHOSTS": args.target}
+    )
+
+    if "error" in result:
+        print(f"[!] Error: {result['error']}")
+    else:
+        print(f"[+] Module executed successfully")
+        if result.get("found"):
+            print(f"[+] Found credentials:")
+            for cred in result["found"]:
+                print(f"    {cred}")
+
+
 def main():
     """Main function."""
     args = parse_args()
@@ -452,7 +551,28 @@ def main():
         handle_list_plugins()
         return
 
+    # Handle check integrations
+    if args.check_integrations:
+        handle_check_integrations()
+        return
+
     print_banner()
+
+    # Handle Nmap scans
+    if args.nmap or args.nmap_service or args.nmap_full or args.nmap_vuln or args.nmap_bruteforce:
+        if not args.target:
+            print("[!] Target required. Use -t or --target")
+            sys.exit(1)
+        handle_nmap_scan(args)
+        return
+
+    # Handle Metasploit exploit
+    if args.msf and args.msf_exploit:
+        if not args.target:
+            print("[!] Target required. Use -t or --target")
+            sys.exit(1)
+        handle_msf_exploit(args)
+        return
 
     # Handle port listing
     if args.list:
